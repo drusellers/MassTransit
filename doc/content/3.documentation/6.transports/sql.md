@@ -44,6 +44,10 @@ The SQL transport supports:
 - Supports all consumer types, including consumers, sagas, state machines, and routing slips
 - Transactional Outbox using Entity Framework Core
 
+::repo-link{link="https://github.com/filipbekic01/resqueue" title="ResQueue"}
+This is an extension to MassTransit for the SQL Transport that can help with management
+::
+
 ### Sample
 
 :sample{sample="sql-transport"}
