@@ -1,0 +1,9 @@
+#!/bin/bash
+
+claude 'Please study the code base, and write an architecture document that explains the outbox is implemented. Store that as `outbox.md`'
+
+claude 'Please study the code base, and write an architecture document that outlines how the MultiBus is implemented. Store that as `multibus.md`'
+
+claude --permission-mode 'plan' \
+    --file outbox:./outbox.md multibus:./multibus.md \
+    "Please create a plan to implement the outbox for the multibus, using the attached files, and write it to plan.md"

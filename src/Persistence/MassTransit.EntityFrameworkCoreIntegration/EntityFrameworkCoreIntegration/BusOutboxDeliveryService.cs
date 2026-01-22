@@ -1,3 +1,4 @@
+#nullable enable
 namespace MassTransit.EntityFrameworkCoreIntegration
 {
     using System;
@@ -6,6 +7,7 @@ namespace MassTransit.EntityFrameworkCoreIntegration
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using DependencyInjection;
     using Internals;
     using Logging;
     using Microsoft.EntityFrameworkCore;
@@ -21,11 +23,13 @@ namespace MassTransit.EntityFrameworkCoreIntegration
     using Util;
 
 
-    public class BusOutboxDeliveryService<TDbContext> :
+    public class BusOutboxDeliveryService<TBus, TDbContext> :
         BackgroundService
+        where TBus : class, IBus
         where TDbContext : DbContext
     {
         readonly IBusControl _busControl;
+        readonly string? _busName;
         readonly IsolationLevel _isolationLevel;
         readonly ILockStatementProvider _lockStatementProvider;
         readonly ILogger _logger;
@@ -35,18 +39,19 @@ namespace MassTransit.EntityFrameworkCoreIntegration
         readonly IServiceProvider _provider;
         readonly IRetryPolicy _retryPolicy;
 
-        string _getOutboxIdStatement;
+        string? _getOutboxIdStatement;
 
-        public BusOutboxDeliveryService(IBusControl busControl, IOptions<OutboxDeliveryServiceOptions> options,
-            IOptions<EntityFrameworkOutboxOptions<TDbContext>> outboxOptions, IBusOutboxNotification notification,
-            ILogger<BusOutboxDeliveryService<TDbContext>> logger, IServiceProvider provider)
+        public BusOutboxDeliveryService(Bind<TBus, IBusControl> busControl, IOptions<OutboxDeliveryServiceOptions<TBus>> options,
+            IOptions<EntityFrameworkOutboxOptions<TDbContext>> outboxOptions, Bind<TBus, IBusOutboxNotification> notification,
+            ILogger<BusOutboxDeliveryService<TBus, TDbContext>> logger, IServiceProvider provider)
         {
-            _busControl = busControl;
-            _notification = notification;
+            _busControl = busControl.Value;
+            _notification = notification.Value;
             _provider = provider;
             _logger = logger;
 
             _options = options.Value;
+            _busName = _options.BusName;
 
             _lockStatementProvider = outboxOptions.Value.LockStatementProvider;
             _isolationLevel = outboxOptions.Value.IsolationLevel;
@@ -106,7 +111,7 @@ namespace MassTransit.EntityFrameworkCoreIntegration
 
             try
             {
-                _getOutboxIdStatement ??= _lockStatementProvider.GetOutboxStatement(dbContext);
+                _getOutboxIdStatement ??= _lockStatementProvider.GetOutboxStatement(dbContext, _busName);
 
                 async Task<int> Execute()
                 {
@@ -333,6 +338,41 @@ namespace MassTransit.EntityFrameworkCoreIntegration
             {
                 //
             }
+        }
+    }
+
+
+    /// <summary>
+    /// Non-generic delivery service for backward compatibility with the default IBus.
+    /// </summary>
+    public class BusOutboxDeliveryService<TDbContext> :
+        BusOutboxDeliveryService<IBus, TDbContext>
+        where TDbContext : DbContext
+    {
+        public BusOutboxDeliveryService(IBusControl busControl, IOptions<OutboxDeliveryServiceOptions> options,
+            IOptions<EntityFrameworkOutboxOptions<TDbContext>> outboxOptions, IBusOutboxNotification notification,
+            ILogger<BusOutboxDeliveryService<TDbContext>> logger, IServiceProvider provider)
+            : base(
+                Bind<IBus>.Create<IBusControl>(busControl),
+                WrapOptions(options),
+                outboxOptions,
+                Bind<IBus>.Create(notification),
+                logger,
+                provider)
+        {
+        }
+
+        static IOptions<OutboxDeliveryServiceOptions<IBus>> WrapOptions(IOptions<OutboxDeliveryServiceOptions> options)
+        {
+            return Options.Create(new OutboxDeliveryServiceOptions<IBus>
+            {
+                BusName = options.Value.BusName,
+                MessageDeliveryLimit = options.Value.MessageDeliveryLimit,
+                MessageDeliveryTimeout = options.Value.MessageDeliveryTimeout,
+                QueryDelay = options.Value.QueryDelay,
+                QueryMessageLimit = options.Value.QueryMessageLimit,
+                QueryTimeout = options.Value.QueryTimeout
+            });
         }
     }
 }

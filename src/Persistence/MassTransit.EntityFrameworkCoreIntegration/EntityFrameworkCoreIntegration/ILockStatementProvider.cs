@@ -1,4 +1,5 @@
-﻿namespace MassTransit.EntityFrameworkCoreIntegration
+#nullable enable
+namespace MassTransit.EntityFrameworkCoreIntegration
 {
     using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,16 @@
         string GetRowLockStatement<T>(DbContext context, params string[] propertyNames)
             where T : class;
 
+        /// <summary>
+        /// Returns the outbox query statement for the default bus (null BusName).
+        /// </summary>
         string GetOutboxStatement(DbContext context);
+
+        /// <summary>
+        /// Returns the outbox query statement filtered by the specified bus name.
+        /// </summary>
+        /// <param name="context">The database context</param>
+        /// <param name="busName">The bus name to filter by (null for the default IBus)</param>
+        string GetOutboxStatement(DbContext context, string? busName);
     }
 }

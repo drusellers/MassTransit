@@ -1,3 +1,4 @@
+#nullable enable
 namespace MassTransit.EntityFrameworkCoreIntegration
 {
     using System.Text;
@@ -27,6 +28,20 @@ namespace MassTransit.EntityFrameworkCoreIntegration
         public void CreateOutboxStatement(StringBuilder sb, string schema, string table, string columnName)
         {
             sb.AppendFormat(@"SELECT * FROM `{0}` ORDER BY `{1}` LIMIT 1 FOR UPDATE SKIP LOCKED", table, columnName);
+        }
+
+        public void CreateOutboxStatement(StringBuilder sb, string schema, string table, string createdColumnName, string busNameColumnName, string? busName)
+        {
+            if (busName == null)
+            {
+                sb.AppendFormat(@"SELECT * FROM `{0}` WHERE `{1}` IS NULL ORDER BY `{2}` LIMIT 1 FOR UPDATE SKIP LOCKED",
+                    table, busNameColumnName, createdColumnName);
+            }
+            else
+            {
+                sb.AppendFormat(@"SELECT * FROM `{0}` WHERE `{1}` = '{2}' ORDER BY `{3}` LIMIT 1 FOR UPDATE SKIP LOCKED",
+                    table, busNameColumnName, busName, createdColumnName);
+            }
         }
     }
 }

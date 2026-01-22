@@ -1,3 +1,4 @@
+#nullable enable
 namespace MassTransit.EntityFrameworkCoreIntegration
 {
     using System.Text;
@@ -35,6 +36,29 @@ namespace MassTransit.EntityFrameworkCoreIntegration
                 + $" WHERE rowid=(SELECT \"mtl1\".rowid FROM {tabName} \"mtl1\""
                 + $" ORDER BY \"mtl1\".\"" + columnName + "\""
                 + " FETCH FIRST 1 ROW ONLY) FOR UPDATE SKIP LOCKED";
+            sb.Append(s);
+        }
+
+        public void CreateOutboxStatement(StringBuilder sb, string schema, string table, string createdColumnName, string busNameColumnName, string? busName)
+        {
+            var tabName = FormatTableName(schema, table);
+            string s;
+            if (busName == null)
+            {
+                s = $"SELECT * FROM {tabName}"
+                    + $" WHERE rowid=(SELECT \"mtl1\".rowid FROM {tabName} \"mtl1\""
+                    + $" WHERE \"mtl1\".\"{busNameColumnName}\" IS NULL"
+                    + $" ORDER BY \"mtl1\".\"{createdColumnName}\""
+                    + " FETCH FIRST 1 ROW ONLY) FOR UPDATE SKIP LOCKED";
+            }
+            else
+            {
+                s = $"SELECT * FROM {tabName}"
+                    + $" WHERE rowid=(SELECT \"mtl1\".rowid FROM {tabName} \"mtl1\""
+                    + $" WHERE \"mtl1\".\"{busNameColumnName}\" = '{busName}'"
+                    + $" ORDER BY \"mtl1\".\"{createdColumnName}\""
+                    + " FETCH FIRST 1 ROW ONLY) FOR UPDATE SKIP LOCKED";
+            }
             sb.Append(s);
         }
 

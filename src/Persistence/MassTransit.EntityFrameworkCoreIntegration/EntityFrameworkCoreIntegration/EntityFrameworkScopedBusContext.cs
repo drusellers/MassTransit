@@ -73,7 +73,8 @@ namespace MassTransit.EntityFrameworkCoreIntegration
                     _outboxState ??= _dbContext.Add(new OutboxState
                     {
                         OutboxId = _outboxId,
-                        Created = DateTime.UtcNow
+                        Created = DateTime.UtcNow,
+                        BusName = typeof(TBus) == typeof(IBus) ? null : typeof(TBus).Name
                     });
                 }
             }

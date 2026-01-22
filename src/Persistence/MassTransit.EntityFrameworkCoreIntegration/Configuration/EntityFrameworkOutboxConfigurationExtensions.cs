@@ -29,6 +29,25 @@ namespace MassTransit
         }
 
         /// <summary>
+        /// Configures the Entity Framework Outbox on a MultiBus instance, which can subsequently be used to configure
+        /// the transactional outbox on a receive endpoint.
+        /// </summary>
+        /// <param name="configurator"></param>
+        /// <param name="configure"></param>
+        /// <typeparam name="TBus">The bus type</typeparam>
+        /// <typeparam name="TDbContext">The DbContext type</typeparam>
+        /// <returns></returns>
+        public static void AddEntityFrameworkOutbox<TBus, TDbContext>(this IBusRegistrationConfigurator<TBus> configurator,
+            Action<IEntityFrameworkOutboxConfigurator>? configure = null)
+            where TBus : class, IBus
+            where TDbContext : DbContext
+        {
+            var outboxConfigurator = new EntityFrameworkOutboxConfigurator<TBus, TDbContext>(configurator);
+
+            outboxConfigurator.Configure(configure);
+        }
+
+        /// <summary>
         /// Configure the Entity Framework outbox on the receive endpoint
         /// </summary>
         /// <param name="configurator"></param>
@@ -297,6 +316,13 @@ namespace MassTransit
 
             outbox.Property(p => p.Delivered);
             outbox.Property(p => p.LastSequenceNumber);
+
+            outbox.Property(p => p.BusName).HasMaxLength(256);
+            outbox.HasIndex(p => new
+            {
+                p.BusName,
+                p.Created
+            });
         }
 
         /// <summary>

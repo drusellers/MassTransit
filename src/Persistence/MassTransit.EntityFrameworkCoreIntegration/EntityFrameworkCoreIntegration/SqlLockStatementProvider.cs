@@ -1,3 +1,4 @@
+#nullable enable
 namespace MassTransit.EntityFrameworkCoreIntegration
 {
     using System;
@@ -30,7 +31,7 @@ namespace MassTransit.EntityFrameworkCoreIntegration
             _enableSchemaCaching = enableSchemaCaching;
         }
 
-        string DefaultSchema { get; }
+        string? DefaultSchema { get; }
 
         public virtual string GetRowLockStatement<T>(DbContext context)
             where T : class
@@ -46,10 +47,15 @@ namespace MassTransit.EntityFrameworkCoreIntegration
 
         public virtual string GetOutboxStatement(DbContext context)
         {
-            var schemaTableTrio = GetSchemaAndTableNameAndColumnName(context, typeof(OutboxState), nameof(OutboxState.Created));
+            return GetOutboxStatement(context, null);
+        }
+
+        public virtual string GetOutboxStatement(DbContext context, string? busName)
+        {
+            var schemaTableTrio = GetSchemaAndTableNameAndColumnName(context, typeof(OutboxState), nameof(OutboxState.Created), nameof(OutboxState.BusName));
 
             var sb = new StringBuilder(128);
-            _formatter.CreateOutboxStatement(sb, schemaTableTrio.Schema, schemaTableTrio.Table, schemaTableTrio.ColumnNames[0]);
+            _formatter.CreateOutboxStatement(sb, schemaTableTrio.Schema, schemaTableTrio.Table, schemaTableTrio.ColumnNames[0], schemaTableTrio.ColumnNames[1], busName);
 
             return sb.ToString();
         }

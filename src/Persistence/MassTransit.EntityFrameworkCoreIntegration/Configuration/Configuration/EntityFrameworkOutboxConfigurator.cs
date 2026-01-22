@@ -10,8 +10,9 @@ namespace MassTransit.Configuration
     using Middleware;
 
 
-    public class EntityFrameworkOutboxConfigurator<TDbContext> :
+    public class EntityFrameworkOutboxConfigurator<TBus, TDbContext> :
         IEntityFrameworkOutboxConfigurator
+        where TBus : class, IBus
         where TDbContext : DbContext
     {
         readonly IBusRegistrationConfigurator _configurator;
@@ -46,6 +47,12 @@ namespace MassTransit.Configuration
 
         public TimeSpan QueryTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
+        /// <summary>
+        /// The bus name used to identify this bus's outbox messages.
+        /// Null for the default IBus, otherwise the type name of TBus.
+        /// </summary>
+        protected string? BusName => typeof(TBus) == typeof(IBus) ? null : typeof(TBus).Name;
+
         public void DisableInboxCleanupService()
         {
             _registerInboxCleanupService = false;
@@ -53,7 +60,7 @@ namespace MassTransit.Configuration
 
         public virtual void UseBusOutbox(Action<IEntityFrameworkBusOutboxConfigurator>? configure = null)
         {
-            var busOutboxConfigurator = new EntityFrameworkBusOutboxConfigurator<TDbContext>(_configurator, this);
+            var busOutboxConfigurator = new EntityFrameworkBusOutboxConfigurator<TBus, TDbContext>(_configurator, this);
 
             busOutboxConfigurator.Configure(configure);
         }
@@ -80,6 +87,20 @@ namespace MassTransit.Configuration
                     options.QueryTimeout = QueryTimeout;
                 });
             }
+        }
+    }
+
+
+    /// <summary>
+    /// Non-generic configurator for backward compatibility with the default IBus.
+    /// </summary>
+    public class EntityFrameworkOutboxConfigurator<TDbContext> :
+        EntityFrameworkOutboxConfigurator<IBus, TDbContext>
+        where TDbContext : DbContext
+    {
+        public EntityFrameworkOutboxConfigurator(IBusRegistrationConfigurator configurator)
+            : base(configurator)
+        {
         }
     }
 }

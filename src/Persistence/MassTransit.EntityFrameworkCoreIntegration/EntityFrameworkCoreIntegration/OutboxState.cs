@@ -39,5 +39,10 @@ namespace MassTransit.EntityFrameworkCoreIntegration
         /// The last sequence number that was successfully delivered to the transport
         /// </summary>
         public long? LastSequenceNumber { get; set; }
+
+        /// <summary>
+        /// The name of the bus that owns this outbox (null for the default IBus)
+        /// </summary>
+        public string? BusName { get; set; }
     }
 }

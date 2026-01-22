@@ -1,3 +1,4 @@
+#nullable enable
 namespace MassTransit.EntityFrameworkCoreIntegration
 {
     using System.Text;
@@ -23,6 +24,18 @@ namespace MassTransit.EntityFrameworkCoreIntegration
         public void CreateOutboxStatement(StringBuilder sb, string schema, string table, string columnName)
         {
             sb.Append($@"SELECT * FROM ""{table}"" ORDER BY ""{columnName}"" LIMIT 1");
+        }
+
+        public void CreateOutboxStatement(StringBuilder sb, string schema, string table, string createdColumnName, string busNameColumnName, string? busName)
+        {
+            if (busName == null)
+            {
+                sb.Append($@"SELECT * FROM ""{table}"" WHERE ""{busNameColumnName}"" IS NULL ORDER BY ""{createdColumnName}"" LIMIT 1");
+            }
+            else
+            {
+                sb.Append($@"SELECT * FROM ""{table}"" WHERE ""{busNameColumnName}"" = '{busName}' ORDER BY ""{createdColumnName}"" LIMIT 1");
+            }
         }
     }
 }

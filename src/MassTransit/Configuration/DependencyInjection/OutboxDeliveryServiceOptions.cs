@@ -1,3 +1,4 @@
+#nullable enable
 namespace MassTransit
 {
     using System;
@@ -29,5 +30,21 @@ namespace MassTransit
         /// Database query timeout for loading outbox messages
         /// </summary>
         public TimeSpan QueryTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// The name of the bus that owns outbox messages to deliver (null for the default IBus)
+        /// </summary>
+        public string? BusName { get; set; }
+    }
+
+
+    /// <summary>
+    /// Bus-specific outbox delivery service options for MultiBus support.
+    /// </summary>
+    /// <typeparam name="TBus">The bus type</typeparam>
+    public class OutboxDeliveryServiceOptions<TBus> :
+        OutboxDeliveryServiceOptions
+        where TBus : class, IBus
+    {
     }
 }
