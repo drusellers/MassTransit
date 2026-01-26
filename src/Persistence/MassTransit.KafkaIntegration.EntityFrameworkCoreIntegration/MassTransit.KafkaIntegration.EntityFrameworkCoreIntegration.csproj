@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../../signing.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>MassTransit</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>MassTransit.Kafka.EntityFrameworkCore</PackageId>
+    <Title>MassTransit.Kafka.EntityFrameworkCore</Title>
+    <PackageTags>MassTransit;Kafka;EF;EFCore;EntityFramework;EntityFrameworkCore;Outbox</PackageTags>
+    <Description>MassTransit Kafka transactional outbox support with Entity Framework Core; $(Description)</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MassTransit.EntityFrameworkCoreIntegration\MassTransit.EntityFrameworkCoreIntegration.csproj" />
+    <ProjectReference Include="..\..\Transports\MassTransit.KafkaIntegration\MassTransit.KafkaIntegration.csproj" />
+  </ItemGroup>
+</Project>
